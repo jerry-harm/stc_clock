@@ -10,7 +10,8 @@
 // 8    00100000
 // 9    10100000
 // C    00111100
-// DP    11011111
+// DP   11011111
+// -    11110111
 
 
 #include "8052.h"
@@ -29,6 +30,7 @@
 #define C_DISPLAY 0x3C
 #define DP 0x20
 #define BLANK 0xff
+#define MINUS 0xf7
 
 #define P_DIG P0
 #define P_DIG1 P1_0
@@ -79,6 +81,9 @@ void DisplayNumber(unsigned char num)
         break;
     case 11:
         P_DIG = BLANK;
+        break;
+    case 12:
+        P_DIG= MINUS;
         break;
     }
 }

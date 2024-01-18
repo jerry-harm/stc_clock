@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include "lint.h"
 #include "8052.h"
 #include "buzz.h"
 #include "ds1302.h"
@@ -29,9 +30,6 @@ void Interrupt_Init(void) // 1毫秒@11.0592MHz
 // 初始化端口
 void InitPin()
 {
-    P0 = 0x00;        // 设置P0口为低电平输出
-    P1 = 0x00;        // 设置P1口为低电平输出
-    P2 = 0x00;        // 设置P2口为低电平输出
     Ds1302Protect(1); // 开启写保护
 }
 
@@ -178,9 +176,14 @@ void Temperature(){
             }
         }
         if(mode){
-            DisplayScan(tem_h,tem_l,0x4,0);
+            unsigned char h,l;
+            h=(tem_h/0x0f);
+            l=((tem_h&0x0f)<<1)+(tem_l&0x0f);
+            if(tem_l/0x0f) h+=0xC0;
+            DisplayScan(h,l,0x2,0);
         }else{
-            DisplayScan(hum_h,hum_l,0x4,0);
+            //hum_l will be 0
+            DisplayScan(0x00,hum_h,0,0);
         }
         
     }
