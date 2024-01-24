@@ -2,7 +2,8 @@
     "files.associations": {
         "8052.h": "c",
         "8051.h": "c",
-        "lint.h": "c"
+        "lint.h": "c",
+        "display.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

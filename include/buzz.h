@@ -46,20 +46,22 @@
 
 void PlayTone(int tone_halfcycle_10us, int duration_1ms){
     // 这里实现播放音符的代码
-    
-    int t= duration_1ms*100/(tone_halfcycle_10us*2);
+    int t;
+    if (tone_halfcycle_10us==0) Delay10ms();
+    else 
+    {t = duration_1ms*100/(tone_halfcycle_10us*2);
     while(--t){
     P_TONE = 1;
     for(int i=0;i<tone_halfcycle_10us;i++)Delay10us();
     P_TONE = 0;
     for(int i=0;i<tone_halfcycle_10us;i++)Delay10us();
     };
-    
+    }
 }
 
 void PlayAlarm(){
-    unsigned char table[]={C4,E4,D4,C4,C4,D4,E4,C4};
-    for(int i=0;i<8;i++){
-        PlayTone(table[i],1000);
+    unsigned char table[]={C4,0,E4,0,D4,0,C4,0,C4,0,D4,0,E4,0,C4,0};
+    for(int i=0;i<16;i++){
+        PlayTone(table[i],100);
     }
 }

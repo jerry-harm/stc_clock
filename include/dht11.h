@@ -3,6 +3,7 @@
 
 #include "8052.h"
 
+#include "display.h"
 #define DHT11_DATA P1_4
 
 // 两次读取时间不要短于2s
@@ -14,10 +15,13 @@ void Dht11Start()
     DHT11_DATA = 1;
     while (DHT11_DATA)
         ;
+    LED_0=0;
     while (!DHT11_DATA)
         ;
+    LED_0=1;
     while (DHT11_DATA)
         ;
+    LED_0=0;
 }
 
 // 依次读取温度整数，小数，湿度整数，小数，以及前四项的和

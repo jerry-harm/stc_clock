@@ -3,6 +3,7 @@
 
 // https://zhuanlan.zhihu.com/p/674678422
 #include "8052.h"
+#include "compiler.h"
 
 #define DS1302_RST P1_7
 #define DS1302_DATA P1_6
@@ -29,10 +30,11 @@
 
 unsigned char Ds1302ReadByte()
 {
-    unsigned char res = 0x00;
+    unsigned char res;
     for (int i = 0; i < 8; i++)
     {
-        res = DS1302_DATA << i | res;
+        unsigned char bi=DS1302_DATA;
+        res=(res>>1)|(bi<<7);
         DS1302_CLK = 1;
         DS1302_CLK = 0;
     }
@@ -43,37 +45,43 @@ void Ds1302WriteByte(int d)
 {
     for (int i = 0; i < 8; i++)
     {
-        if (d % 2)
-        {
-            DS1302_DATA = 1;
-        }
-        else
-        {
-            DS1302_DATA = 0;
-        }
+DS1302_DATA = (d & 0x01);
+        d = d >> 1;
         DS1302_CLK = 1;
         DS1302_CLK = 0;
-        d = d >> 1;
     }
 }
 
 unsigned char Ds1302Read(unsigned char addr)
 {
     DS1302_RST = 0;
-    DS1302_CLK = 1;
+    DS1302_CLK = 0;
+
     DS1302_RST = 1;
     Ds1302WriteByte(addr);
+
+    unsigned char res = Ds1302ReadByte();
+
+// 这里的复位很重要
     DS1302_RST = 0;
-    return Ds1302ReadByte();
+    DS1302_CLK = 1;
+
+    DS1302_DATA = 0;
+    DS1302_DATA = 1;
+
+    return res;
 }
 
 void Ds1302Write(unsigned char addr, unsigned char data_hex)
 {
     DS1302_RST = 0;
-    DS1302_CLK = 1;
+    DS1302_CLK = 0;
+    NOP();
     DS1302_RST = 1;
     Ds1302WriteByte(addr);
+    NOP();
     Ds1302WriteByte(data_hex);
+    NOP();
     DS1302_RST = 0;
 }
 
@@ -92,6 +100,7 @@ void Ds1302Protect(unsigned char protect)
 
 void Ds1302Init()
 {
+
     Ds1302Protect(0);
 
     Ds1302Write(DS1302_YEAR_WRITE, 0x24);

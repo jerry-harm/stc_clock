@@ -7,18 +7,26 @@
 #define KEY_3 P2_3
 
 /*
-1 3 
+1 3
 0 2
 */
 
-bool KeyDown(unsigned char key){
-    if(key == 1)
+bool KeyDown(unsigned char key)
+{
+    if (key == 1)
         return 0;
-    else{
-        Delay10us();
-        if(key == 1)
+    else
+    {
+        Delay10ms();
+        if (key == 1)
+        {
+            key = 1;
             return 0;
+        }
         else
+        {
+            key = 1;
             return 1;
+        }
     }
 }

@@ -13,6 +13,8 @@
 // DP   11011111
 // -    11110111
 
+#ifndef DISPLAY
+#define DISPLAY
 
 #include "8052.h"
 #include "ds1302.h"
@@ -42,67 +44,95 @@
 #define LED_1 P2_6
 #define LED_2 P2_5
 
-void DisplayNumber(unsigned char num)
+void DisplayNumber(unsigned char num,unsigned char dot)
 {
     switch (num)
     {
     case 0:
-        P_DIG = ZERO;
+        P_DIG = ZERO-dot*DP;
         break;
     case 1:
-        P_DIG = ONE;
+        P_DIG = ONE-dot*DP;
         break;
     case 2:
-        P_DIG = TWO;
+        P_DIG = TWO-dot*DP;
         break;
     case 3:
-        P_DIG = THREE;
+        P_DIG = THREE-dot*DP;
         break;
     case 4:
-        P_DIG = FOUR;
+        P_DIG = FOUR-dot*DP;
         break;
     case 5:
-        P_DIG = FIVE;
+        P_DIG = FIVE-dot*DP;
         break;
     case 6:
-        P_DIG = SIX;
+        P_DIG = SIX-dot*DP;
         break;
     case 7:
-        P_DIG = SEVEN;
+        P_DIG = SEVEN-dot*DP;
         break;
     case 8:
-        P_DIG = EIGHT;
+        P_DIG = EIGHT-dot*DP;
         break;
     case 9:
-        P_DIG = NINE;
+        P_DIG = NINE-dot*DP;
         break;
     case 10:
         P_DIG = C_DISPLAY;
         break;
     case 11:
-        P_DIG = BLANK;
+        P_DIG = MINUS;
         break;
-    case 12:
-        P_DIG= MINUS;
+    case 0xf:
+        P_DIG = BLANK;
+        break; 
+    default:
+        P_DIG = C_DISPLAY;
         break;
     }
 }
 
-void DisplayScan(unsigned char high_hex, unsigned char low_hex, unsigned char dot, unsigned char blink)
+void DisplayScan(unsigned char high_hex, unsigned char low_hex, unsigned char dot)
 {
-    for (int i = 500; i > 0; --i)
+    for (int i = 10; i > 0; --i)
     {
-        P_DIG1 = 1;
-        DisplayNumber((blink >> 3) % 2 ? 11 : (high_hex >> 4) - DP * ((dot >> 3) % 2));
         P_DIG1 = 0;
-        P_DIG2 = 1;
-        DisplayNumber((blink >> 2) % 2 ? 11 : (high_hex & 0x0F) - DP * ((dot >> 2) % 2));
         P_DIG2 = 0;
-        P_DIG3 = 1;
-        DisplayNumber((blink >> 1) % 2 ? 11 : ((low_hex >> 4) - DP * ((dot >> 1) % 2)));
         P_DIG3 = 0;
-        P_DIG4 = 1;
-        DisplayNumber((blink) % 2 ? 11 : ((low_hex & 0x0F) - DP * (dot % 2)));
         P_DIG4 = 0;
+
+        P_DIG1 = 1;
+        DisplayNumber(high_hex / 16,0);
+        Delay1ms();
+        P_DIG1 = 0;
+        DisplayNumber(0xf,0);
+        
+        P_DIG2 = 1;
+        DisplayNumber(high_hex % 16,dot);
+        Delay1ms();
+        P_DIG2 = 0;
+        DisplayNumber(0xf,0);
+        
+        P_DIG3 = 1;
+        DisplayNumber(low_hex / 16,0);
+        Delay1ms();
+        P_DIG3 = 0;
+        DisplayNumber(0xf,0);
+        
+        P_DIG4 = 1;
+        DisplayNumber(low_hex % 16,0);
+        Delay1ms();
+        P_DIG4 = 0;
+        DisplayNumber(0xf,0);
+        
     }
 }
+
+// void TestDisplay(){
+//     for(int i=0;i<10000;i++){
+//         DisplayScan(0x11, 0x11, 0);
+//     }
+// }
+
+#endif
