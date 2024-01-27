@@ -22,7 +22,7 @@ void Interrupt_Init(void) // 1毫秒@11.0592MHz
     ET0 = 1;      // T0中断
 
     IE0 = 0; // 清除外部IE0标志
-    IT0 = 0; // 外部中断0设置为低电平触发
+    IT0 = 0; // 外部中断0设置为上下沿都触发
     EX0 = 1; // 使能外部中断
     INT0 = 1;
 
@@ -31,8 +31,6 @@ void Interrupt_Init(void) // 1毫秒@11.0592MHz
 
 void Timer_interrupt() __interrupt(1)
 {
-    TL0 = 0xCD; // 设置定时初始值
-    TH0 = 0xD4; // 设置定时初始值
     if (global_t < 1000)
         global_t++;
     else
@@ -48,10 +46,18 @@ void Timer_interrupt() __interrupt(1)
 
 void Ext_interrupt() __interrupt(0)
 {
-    if (global_mode < 2)
-        global_mode++;
-    else
-        global_mode = 0;
+    LED_1 = 0;
+    for (int i = 5; i > 0; i--)
+        Delay10ms();
+    if (INT0 == 1)
+    {
+        LED_1 = 1;
+        if (global_mode < 3)
+            global_mode++;
+
+        else
+            global_mode = 0;
+    }
 }
 
 // key0:up key2:down, key1:left, key3:right
@@ -68,19 +74,15 @@ void Clock()
     unsigned char mode = 4;
     while (global_mode == 0)
     {
-        if (KeyDown(KEY_1))
+        if (Key1Up())
         {
             if (mode > 0)
                 mode--;
-            else
-                mode = 7;
         }
-        else if (KeyDown(KEY_3))
+        else if (Key3Up())
         {
-            if (mode < 7)
+            if (mode < 6)
                 mode++;
-            else
-                mode = 0;
         }
 
         unsigned char read_map[7] = {
@@ -101,6 +103,8 @@ void Clock()
     }
 }
 
+#include "hex.h"
+
 // 校时模块
 void AdjustClock()
 {
@@ -118,19 +122,19 @@ void AdjustClock()
 
     while (global_mode == 1)
     {
-        if (KeyDown(KEY_1) && flag > 0)
+        if (Key1Up() && flag > 0)
         {
             flag--;
         }
-        else if (KeyDown(KEY_3) && flag < 7)
+        else if (Key3Up() && flag < 6)
         {
             flag++;
         }
-        else if (KeyDown(KEY_0))
+        else if (Key0Up())
         {
             time_all[flag]++;
         }
-        else if (KeyDown(KEY_2))
+        else if (Key2Up())
         {
             time_all[flag]--;
         }
@@ -139,26 +143,28 @@ void AdjustClock()
 
         // year
 
+        time_all[0] = HexClock(time_all[0], 99);
+
         // month
-
+        time_all[1] = HexClock(time_all[1], 12);
         // day
-
+        time_all[2] = HexClock(time_all[2], 31);
         // hour
-
+        time_all[3] = HexClock(time_all[3], 23);
         // minute
-
+        time_all[4] = HexClock(time_all[4], 59);
         // second
-
+        time_all[5] = HexClock(time_all[5], 59);
         // week
+        time_all[6] = HexClock(time_all[6], 6);
 
-
-        if (flag < 12)
+        if (flag < 6)
         {
-            DisplayScan(time_all[flag / 2], time_all[flag / 2 + 1], global_0_5Hz);
+            DisplayScan(global_t < 300 ? 0xff : time_all[flag], time_all[flag + 1], global_0_5Hz);
         }
         else
         {
-            DisplayScan(time_all[flag / 2 - 1], time_all[flag / 2], global_0_5Hz);
+            DisplayScan(time_all[flag - 1], global_t < 300 ? 0xff : time_all[flag], global_0_5Hz);
         }
     }
     Ds1302Protect(0); // close protect
@@ -183,46 +189,60 @@ void Temperature()
     unsigned char mode = 0;
     while (global_mode == 2)
     {
-        if (KeyDown(KEY_2))
+        if (Key2Up())
             mode = !mode;
-        if (global_0_5Hz)
+        if (global_0_5Hz && global_t < 20)
         {
+            EA = 0;
             unsigned char check;
-            Dht11Start(); // 这样就能实现两秒运行一次
-            tem_h = Dht11ReadByte();
-            tem_l = Dht11ReadByte();
+            Dht11Start();
+                if(DHT11_DATA==0){
+        while(DHT11_DATA==0);
+        while(DHT11_DATA==1);
+    
             hum_h = Dht11ReadByte();
+
             hum_l = Dht11ReadByte();
+
+            tem_h = Dht11ReadByte();
+
+            tem_l = Dht11ReadByte();
+
             check = Dht11ReadByte();
+            
 
             if (check != tem_h + tem_l + hum_h + hum_l)
             {
                 // 读错了
-                tem_h = 0xff;
-                tem_l = 0xff;
-                hum_h = 0xff;
-                hum_l = 0xff;
+                LED_1=0;
+                
             }
-        }
+            else{
+                LED_1=1;
+            }
+            EA = 1;
+        }}
+        // DisplayScan(hum_h, hum_l, 1);
         if (mode)
         {
-            unsigned char h, l;
-            h = (tem_h / 0x0f);
-            l = ((tem_h & 0x0f) << 1) + (tem_l & 0x0f);
-            if (tem_l / 0x0f)
-                h += 0xC0;
-            DisplayScan(h, l, 0x2);
+            // unsigned char h, l;
+            // h = (tem_h / 0x10);
+            // l = ((tem_h % 0x10) << 1) + (tem_l % 0x10);
+            // if (tem_l / 0x10)
+            //     h += 0xB0;
+            DisplayScan(tem_h, tem_l, 1);
         }
         else
         {
             // hum_l will be 0
-            DisplayScan(0x00, hum_h, 0);
+            DisplayScan(hum_h, hum_l, 0);
         }
     }
 }
 
 void InitPin()
 {
+    DHT11_DATA = 1;
     KEY_0 = 1;
     KEY_1 = 1;
     KEY_2 = 1;
@@ -235,14 +255,14 @@ void main()
     InitPin();
 
     Interrupt_Init(); // 初始化中断
-    Ds1302Init();
+    // Ds1302Init();
     // TestDisplay();
     // main cycle
 
     while (1)
     {
         Ds1302Protect(1); // 开启写保护
-                          //     // modes 0:clock 1:adjust_clock 2:temperature
+        // modes 0:clock 1:adjust_clock 2:temperature
         switch (global_mode)
         {
 
@@ -252,9 +272,9 @@ void main()
         case 1:
             AdjustClock();
             break;
-        // case 2:
-        //     Temperature();
-        //     break;
+        case 2:
+            Temperature();
+            break;
         default:
             global_mode = 0;
             break;

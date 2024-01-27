@@ -30,11 +30,11 @@
 
 unsigned char Ds1302ReadByte()
 {
-    unsigned char res;
+    unsigned char res = 0;
     for (int i = 0; i < 8; i++)
     {
-        unsigned char bi=DS1302_DATA;
-        res=(res>>1)|(bi<<7);
+        unsigned char bi = DS1302_DATA;
+        res = (res >> 1) | (bi << 7);
         DS1302_CLK = 1;
         DS1302_CLK = 0;
     }
@@ -45,7 +45,7 @@ void Ds1302WriteByte(int d)
 {
     for (int i = 0; i < 8; i++)
     {
-DS1302_DATA = (d & 0x01);
+        DS1302_DATA = (d & 0x01);
         d = d >> 1;
         DS1302_CLK = 1;
         DS1302_CLK = 0;
@@ -62,7 +62,7 @@ unsigned char Ds1302Read(unsigned char addr)
 
     unsigned char res = Ds1302ReadByte();
 
-// 这里的复位很重要
+    // 这里的复位很重要
     DS1302_RST = 0;
     DS1302_CLK = 1;
 
