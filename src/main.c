@@ -173,6 +173,7 @@ void Temperature()
                 {
                     // 读错了
                     LED_2 = 0;
+
                 }
                 else
                 {
@@ -182,20 +183,15 @@ void Temperature()
             DHT11_DATA=1;
             EA = 1;
         }
-        // DisplayScan(hum_h, hum_l, 1);
         if (mode)
         {
-            // unsigned char h, l;
-            // h = (tem_h / 0x10);
-            // l = ((tem_h % 0x10) << 1) + (tem_l % 0x10);
-            // if (tem_l / 0x10)
-            //     h += 0xB0;
-            DisplayScan(tem_h, tem_l, 1);
+
+            DisplayScan((tem_h/10*0x10)+tem_h%10, (tem_l%10)*0x10+(tem_l/0x10?0xb:0xf) , 1);
         }
         else
         {
-            // hum_l will be 0
-            DisplayScan(hum_h, hum_l, 0);
+
+            DisplayScan((hum_h/10*0x10)+hum_h%10, hum_l, 0);
         }
     }
 }
