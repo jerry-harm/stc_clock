@@ -60,8 +60,8 @@ void PlayTone(int tone_halfcycle_10us, int duration_1ms){
 }
 
 void PlayAlarm(){
-    unsigned char table[]={C4,0,E4,0,D4,0,C4,0,C4,0,D4,0,E4,0,C4,0};
-    for(int i=0;i<16;i++){
+    unsigned char table[]={C4,0,E4,0,D4,};
+    for(int i=0;i<5;i++){
         PlayTone(table[i],100);
     }
 }
